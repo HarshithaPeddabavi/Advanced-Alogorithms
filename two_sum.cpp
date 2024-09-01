@@ -4,7 +4,7 @@
 
 using namespace std;
 
-// Function to find indices of two numbers that add up to the target
+// Function to find the indices of two numbers that add up to the target
 
 vector<int> twoSum(vector<int>& nums, int target) {
     unordered_map<int, int> numMap; // Hash map to store number and its index
@@ -12,7 +12,7 @@ vector<int> twoSum(vector<int>& nums, int target) {
     for (int i = 0; i < nums.size(); i++) {
         int complement = target - nums[i]; // Find the complement of the current number
         if (numMap.find(complement) != numMap.end()) {
-            // If the complement is found in the map, return the indices
+            // Return the indices if the complement is found in the map
             return {numMap[complement], i};
         }
         // Store the current number and its index in the map
