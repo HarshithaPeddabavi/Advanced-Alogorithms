@@ -1,0 +1,137 @@
+#include <iostream>
+#include <queue>
+#include <unordered_map>
+#include <vector>
+#include <sstream>
+#include <limits>
+#include <algorithm>
+
+using namespace std;
+
+// Struct for Huffman tree node
+struct Node {
+    char ch;
+    int freq;
+    Node *left, *right;
+
+    Node(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
+};
+
+// Comparator for priority queue
+struct Compare {
+    bool operator()(Node* l, Node* r) {
+        return l->freq > r->freq;
+    }
+};
+
+// Recursive function to generate Huffman codes
+void generateHuffmanCodes(Node* root, string code, unordered_map<char, string>& huffmanCodes) {
+    if (!root) return;
+
+    if (root->ch != '#') // Only add to map if the node contains a valid character
+        huffmanCodes[root->ch] = code;
+
+    generateHuffmanCodes(root->left, code + "0", huffmanCodes);
+    generateHuffmanCodes(root->right, code + "1", huffmanCodes);
+}
+
+// Build the Huffman tree and return the corresponding codes
+unordered_map<char, string> buildHuffmanTree(const string& characters, const vector<int>& frequencies) {
+    priority_queue<Node*, vector<Node*>, Compare> pq;
+
+    // Create leaf nodes for each character and push to the priority queue
+    for (int i = 0; i < characters.size(); ++i) {
+        pq.push(new Node(characters[i], frequencies[i]));
+    }
+
+    // Build the Huffman tree
+    while (pq.size() > 1) {
+        Node *left = pq.top(); pq.pop();
+        Node *right = pq.top(); pq.pop();
+
+        // Create a new internal node with the sum of the two smallest frequencies
+        Node *parent = new Node('#', left->freq + right->freq);
+        parent->left = left;
+        parent->right = right;
+        pq.push(parent);
+    }
+
+    // Generate the Huffman codes from the tree
+    unordered_map<char, string> huffmanCodes;
+    generateHuffmanCodes(pq.top(), "", huffmanCodes);
+
+    return huffmanCodes;
+}
+
+// Validate that input string contains only alphabetic characters
+bool isValidCharacterInput(const string& input) {
+    return all_of(input.begin(), input.end(), ::isalpha);
+}
+
+// Parse space-separated frequency values from input and validate their count
+bool isValidFrequencyInput(const string& input, vector<int>& frequencies, int expectedCount) {
+    frequencies.clear();
+    istringstream iss(input);
+    int num;
+    while (iss >> num) {
+        frequencies.push_back(num);
+    }
+    return frequencies.size() == expectedCount;
+}
+
+int main() {
+    string characters;
+    vector<int> frequencies;
+    int numCharacters;
+
+    // Input the characters (only distinct letters allowed)
+    while (true) {
+        cout << "Enter the characters (distinct letters): ";
+        cin >> characters;
+        if (isValidCharacterInput(characters) && characters.size() <= 26) {
+            break;
+        } else {
+            cout << "Invalid input. Please enter distinct letters only." << endl;
+        }
+    }
+
+    numCharacters = characters.size();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+
+    // Input the corresponding frequencies
+    while (true) {
+        string frequencyInput;
+        cout << "Enter the frequencies (space-separated): ";
+        getline(cin, frequencyInput);
+        if (isValidFrequencyInput(frequencyInput, frequencies, numCharacters)) {
+            break;
+        } else {
+            cout << "Invalid input. Please enter exactly " << numCharacters << " frequencies." << endl;
+        }
+    }
+
+    // Build Huffman tree and get codes
+    unordered_map<char, string> huffmanCodes = buildHuffmanTree(characters, frequencies);
+
+    cout << "Huffman codes are:" << endl;
+
+    // Store and sort codes
+    vector<string> sortedCodes;
+    for (char c : characters) {
+        sortedCodes.push_back(huffmanCodes[c]);
+    }
+    sort(sortedCodes.begin(), sortedCodes.end());
+
+    // Print sorted codes
+    for (const auto& code : sortedCodes) {
+        cout << code << " ";
+    }
+    cout << endl;
+
+    // Print character-to-code mappings
+    for (const auto& pair : huffmanCodes) {
+        cout << "  " << pair.first << " : " << pair.second << endl;
+    }
+
+    return 0;
+}
